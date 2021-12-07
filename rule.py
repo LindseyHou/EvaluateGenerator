@@ -2,18 +2,31 @@ import json
 from datetime import datetime
 from time import time
 
-from pymongo import MongoClient
+# from pymongo import MongoClient
 
-client = MongoClient("mongodb://localhost:27017/")
-db = client["firefighting-production-new"]
-infos = db["info"].find({})
+# client = MongoClient("mongodb://localhost:27017/")
+# db = client["firefighting-production-new"]
+# infos = db["info"].find({})
 partCode2partType = {}
 count = 0
-for item in infos:
-    for data in item["datas"]:
-        count += 1
-        partCode2partType[data["partCode"]] = data["partType"]
+# for item in infos:
+#     for data in item["datas"]:
+#         count += 1
+#         partCode2partType[data["partCode"]] = data["partType"]
+# print(len(partCode2partType), count)
+
+import mysql.connector
+
+cnx = mysql.connector.connect(user="root", host="127.0.0.1", database="bdp_info")
+sensor_count = {}
+cursor = cnx.cursor()
+query = "SELECT sensor_id, sensor_type,building_id FROM bdp_info.tmp_sensor"
+cursor.execute(query)
+for sensor_id, sensor_type, building_id in cursor:
+    count += 1
+    partCode2partType[sensor_id] = sensor_type
 print(len(partCode2partType), count)
+
 
 in_count = 0
 missing_count = 0
@@ -21,7 +34,7 @@ no_event_count = 0
 postTime = ""
 insert_list = []
 avail = 0
-fn = "adaptor_server.log"
+fn = "1202_1207.log"
 json_time = 0.01
 parse_time = 0.01
 print("counting lines")
@@ -44,7 +57,10 @@ for i, line in enumerate(open(fn)):
     #     print("")
     #     exit(0)
     t1 = time()
-    data = json.loads(line)
+    try:
+        data = json.loads(line)
+    except:
+        continue
     t2 = time()
     # data = parser.parse_string(line)
     data = data["data"]

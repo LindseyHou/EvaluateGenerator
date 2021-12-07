@@ -4,16 +4,28 @@ from datetime import datetime
 insert_list = json.load(open("./insert_list.json"))
 
 
-from pymongo import MongoClient
+# from pymongo import MongoClient
 
-client = MongoClient("mongodb://localhost:27017/")
-db = client["firefighting-production-new"]
+# client = MongoClient("mongodb://localhost:27017/")
+# db = client["firefighting-production-new"]
 partCode2projID = dict()
-infos = list(db["info"].find({}))
-for info in infos:
-    for data in info["datas"]:
-        partCode2projID[data["partCode"]] = info["projID"]
-print(len(partCode2projID))
+count = 0
+# infos = list(db["info"].find({}))
+# for info in infos:
+#     for data in info["datas"]:
+#         partCode2projID[data["partCode"]] = info["projID"]
+# print(len(partCode2projID))
+import mysql.connector
+
+cnx = mysql.connector.connect(user="root", host="127.0.0.1", database="bdp_info")
+sensor_count = {}
+cursor = cnx.cursor()
+query = "SELECT sensor_id, sensor_type,building_id FROM bdp_info.tmp_sensor"
+cursor.execute(query)
+for sensor_id, sensor_type, building_id in cursor:
+    count += 1
+    partCode2projID[sensor_id] = building_id
+print(len(partCode2projID), count)
 
 res = {}
 for item in insert_list:
